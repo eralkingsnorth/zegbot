@@ -38,5 +38,4 @@ coverage/
 
 # Mobile (future)
 apps/mobile/.expo/
-apps/mobile/android/
-apps/mobile/ios/
+apps/mobile/node_modules/

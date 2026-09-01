@@ -9,6 +9,7 @@
   "scripts": {
     "dev:api": "npm run dev --workspace=@zegbot/api",
     "dev:web": "npm run dev --workspace=@zegbot/web",
+    "dev:mobile": "npm run dev --workspace=@zegbot/mobile",
     "dev": "npm run dev:api & npm run dev:web",
     "build": "npm run build --workspaces --if-present",
     "docker:up": "docker compose up -d",

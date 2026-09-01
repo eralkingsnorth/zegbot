@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Plan {
+  id                String   @id @default(uuid())
+  name              String
+  slug              String   @unique
+  price             Float
+  currency          String   @default("USD")
+  interval          String
+  description       String   @db.Text
+  features          Json
+  voiceUsesPerMonth Int?
+  textUsesPerDay    Int?
+  active            Boolean  @default(true)
+  popular           Boolean  @default(false)
+  sortOrder         Int      @default(0)
+  stripeProductId   String?
+  stripePriceId     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  users             User[]
+}
+
+/// One row per logged-in device. Only the SHA-256 hash of the refresh token is
+/// stored, so a database leak cannot be replayed as a login. userId is not a
+/// foreign key because the admin account lives outside the User table.
+model Session {
+  id         String    @id @default(uuid())
+  tokenHash  String    @unique
+  userId     String
+  role       String    @default("user")
+  device     String?   @db.VarChar(255)
+  expiresAt  DateTime
+  lastUsedAt DateTime  @default(now())
+  revokedAt  DateTime?
+  replacedById String?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model User {
+  id                   String    @id @default(uuid())
+  email                String    @unique
+  name                 String
+  passwordHash         String
+  emailVerified        Boolean   @default(false)
+  emailVerifyToken     String?   @unique
+  emailVerifyExpires   DateTime?
+  resetToken           String?   @unique
+  resetExpires         DateTime?
+  planId               String
+  plan                 Plan      @relation(fields: [planId], references: [id])
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  subscriptionStatus   String    @default("none")
+  emailVerifyCode      String?
+  onboardingCompleted  Boolean   @default(true)
+  onboardingStep       String    @default("done")
+  onboardingChannel    String?
+  aiTone               String    @default("friendly")
+  aiAutoReply          Boolean   @default(false)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}

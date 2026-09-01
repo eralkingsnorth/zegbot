@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { WhatsappService } from './whatsapp.service';
 import { WhatsappController } from './whatsapp.controller';
 import { MessagesModule } from '../messages/messages.module';
 
 @Module({
-  imports: [MessagesModule],
+  imports: [forwardRef(() => MessagesModule)],
   providers: [WhatsappService],
   controllers: [WhatsappController],
   exports: [WhatsappService],

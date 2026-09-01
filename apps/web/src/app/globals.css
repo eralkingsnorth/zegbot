@@ -1,26 +1,210 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #f8fafc;
+  --bg-elevated: #ffffff;
+  --surface: #ffffff;
+  --surface-hover: #f1f5f9;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --text: #0f172a;
+  --text-muted: #475569;
+  --text-dim: #94a3b8;
+  --primary: #3b82f6;
+  --primary-light: #60a5fa;
+  --primary-dark: #2563eb;
+  --purple: #8b5cf6;
+  --purple-light: #a78bfa;
+  --accent: #06b6d4;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --whatsapp: #25d366;
+  --gradient-start: #3b82f6;
+  --gradient-end: #8b5cf6;
+  --glow: rgba(59, 130, 246, 0.2);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+/* Subtle page background with soft gradient blobs */
+.mesh-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 50% at 10% -5%, rgba(59, 130, 246, 0.08), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 95% 5%, rgba(139, 92, 246, 0.07), transparent 50%),
+    radial-gradient(ellipse 40% 30% at 50% 105%, rgba(6, 182, 212, 0.05), transparent 55%),
+    var(--bg);
+}
+
+/* Cards */
+.glass {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Gradient utilities */
+.gradient-text {
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.gradient-btn {
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3), 0 1px 3px rgba(59, 130, 246, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.gradient-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4), 0 2px 6px rgba(59, 130, 246, 0.2);
+}
+
+.gradient-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Animations */
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 1.8s ease-in-out infinite;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.35s ease-out both;
+}
+
+/* AI orb */
+.ai-orb {
+  background: radial-gradient(circle at 30% 30%, #60a5fa, #8b5cf6 45%, #06b6d4 80%);
+  box-shadow:
+    0 0 40px rgba(59, 130, 246, 0.45),
+    0 0 80px rgba(139, 92, 246, 0.25);
+  animation: orb-idle 6s ease-in-out infinite;
+}
+
+.ai-orb-core {
+  position: absolute;
+  inset: 12%;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 40% 35%, rgba(255, 255, 255, 0.35), transparent 60%);
+  animation: orb-shimmer 3s ease-in-out infinite;
+}
+
+.ai-orb-glow {
+  position: absolute;
+  inset: -8%;
+  border-radius: 9999px;
+  background: conic-gradient(from 0deg, #3b82f6, #8b5cf6, #06b6d4, #3b82f6);
+  opacity: 0.35;
+  filter: blur(12px);
+  animation: orb-spin 8s linear infinite;
+}
+
+.ai-orb-listening {
+  animation: orb-listen 1.2s ease-in-out infinite;
+}
+
+.ai-orb-thinking {
+  animation: orb-think 1.5s ease-in-out infinite;
+}
+
+@keyframes orb-idle {
+  0%, 100% { transform: scale(1); filter: hue-rotate(0deg); }
+  50% { transform: scale(1.03); filter: hue-rotate(15deg); }
+}
+
+@keyframes orb-shimmer {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.05); }
+}
+
+@keyframes orb-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes orb-listen {
+  0%, 100% { transform: scale(1.05); box-shadow: 0 0 50px rgba(59, 130, 246, 0.6); }
+  50% { transform: scale(1.12); box-shadow: 0 0 70px rgba(139, 92, 246, 0.7); }
+}
+
+@keyframes orb-think {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  33% { transform: scale(1.04) rotate(2deg); }
+  66% { transform: scale(1.04) rotate(-2deg); }
+}
+
+/* Scrollbar */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+}
+
+.composer-icon {
+  display: inline-flex;
+  height: 36px;
+  width: 36px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 16px;
+  color: var(--text-muted);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.composer-icon:hover {
+  background: #fff;
+  color: var(--text);
 }

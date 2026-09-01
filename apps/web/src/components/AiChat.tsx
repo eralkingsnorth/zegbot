@@ -1,17 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { Button } from "@/components/ui/Button";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
 
 type ChatMessage = { role: "user" | "assistant"; text: string };
 
-export function AiChat() {
+export function AiChat({ fullHeight = false }: { fullHeight?: boolean }) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: "assistant",
-      text: 'Hi! Ask "what are my new messages today?" or "send hello to 1234567890".',
+      text: 'Hi! Try "what are my new messages today?" or "send hello to 1234567890".',
     },
   ]);
   const [loading, setLoading] = useState(false);
@@ -42,45 +44,57 @@ export function AiChat() {
   };
 
   return (
-    <section className="flex h-[520px] flex-col rounded-xl border border-zinc-200 bg-white shadow-sm">
-      <div className="border-b border-zinc-100 px-4 py-3">
-        <h2 className="text-lg font-semibold">AI Assistant</h2>
+    <GlassCard
+      strong
+      className={`flex flex-col p-0 animate-fade-up ${fullHeight ? "min-h-[calc(100vh-220px)]" : "h-[560px]"}`}
+    >
+      <div className="border-b border-slate-100 px-5 py-4">
+        <div className="flex items-center gap-2">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-violet-500 text-sm text-white">
+            ✦
+          </span>
+          <div>
+            <h2 className="font-semibold tracking-tight text-slate-900">AI Assistant</h2>
+            <p className="text-xs text-slate-400">Summarize & send across channels</p>
+          </div>
+        </div>
       </div>
 
-      <div className="flex-1 space-y-3 overflow-y-auto p-4">
+      <div className="scrollbar-thin flex-1 space-y-3 overflow-y-auto px-5 py-4">
         {messages.map((msg, i) => (
           <div
             key={i}
-            className={`max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap ${
+            className={`max-w-[88%] animate-fade-up rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
               msg.role === "user"
-                ? "ml-auto bg-blue-600 text-white"
-                : "bg-zinc-100 text-zinc-800"
+                ? "ml-auto bg-gradient-to-br from-blue-500 to-violet-600 text-white shadow-md shadow-blue-200"
+                : "border border-slate-100 bg-slate-50 text-slate-700"
             }`}
           >
             {msg.text}
           </div>
         ))}
         {loading && (
-          <div className="text-sm text-zinc-400">Thinking...</div>
+          <div className="flex items-center gap-2 text-sm text-slate-400">
+            <span className="h-2 w-2 animate-pulse-soft rounded-full bg-blue-400" />
+            Thinking...
+          </div>
         )}
       </div>
 
-      <div className="flex gap-2 border-t border-zinc-100 p-4">
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && send()}
-          placeholder="Ask about messages or send one..."
-          className="flex-1 rounded-lg border border-zinc-200 px-3 py-2 text-sm outline-none focus:border-blue-500"
-        />
-        <button
-          onClick={send}
-          disabled={loading}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-        >
-          Send
-        </button>
+      <div className="border-t border-slate-100 p-4">
+        <div className="flex gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && send()}
+            placeholder="Ask about messages or send one..."
+            className="flex-1 bg-transparent px-3 py-2 text-sm text-slate-800 outline-none placeholder:text-slate-400"
+          />
+          <Button onClick={send} disabled={loading} className="shrink-0 px-5">
+            Send
+          </Button>
+        </div>
       </div>
-    </section>
+    </GlassCard>
   );
 }

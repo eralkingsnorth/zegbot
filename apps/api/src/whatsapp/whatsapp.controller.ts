@@ -10,9 +10,24 @@ export class WhatsappController {
     return this.whatsapp.getState();
   }
 
+  @Get('usage')
+  usage() {
+    return this.whatsapp.usage();
+  }
+
   @Post('connect')
   connect() {
     return this.whatsapp.connect();
+  }
+
+  @Post('logout')
+  logout() {
+    return this.whatsapp.logout();
+  }
+
+  @Post('pairing-code')
+  pairingCode(@Body() body: { phone: string }) {
+    return this.whatsapp.requestPairingCode(body.phone);
   }
 
   @Post('send')

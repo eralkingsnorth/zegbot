@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Zegbot",
+    "slug": "zegbot",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "zegbot",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#07080d"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.zegbot.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#07080d"
+      },
+      "package": "com.zegbot.app"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-web-browser"
+    ]
+  }
+}
