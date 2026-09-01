@@ -12,6 +12,11 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, "node_modules"),
 ];
 
+config.resolver.extraNodeModules = {
+  react: path.resolve(projectRoot, "node_modules/react"),
+  "react-dom": path.resolve(projectRoot, "node_modules/react-dom"),
+};
+
 config.transformer = {
   ...config.transformer,
   unstable_allowRequireContext: true,
