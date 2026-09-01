@@ -159,6 +159,18 @@ body {
   animation: orb-think 1.5s ease-in-out infinite;
 }
 
+.ai-orb-sm {
+  width: 4.5rem;
+  height: 4.5rem;
+  box-shadow:
+    0 0 24px rgba(59, 130, 246, 0.4),
+    0 0 48px rgba(139, 92, 246, 0.2);
+}
+
+.ai-orb-sm .ai-orb-glow {
+  filter: blur(8px);
+}
+
 @keyframes orb-idle {
   0%, 100% { transform: scale(1); filter: hue-rotate(0deg); }
   50% { transform: scale(1.03); filter: hue-rotate(15deg); }

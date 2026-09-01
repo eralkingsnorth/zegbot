@@ -1,0 +1,95 @@
+[
+  {
+    "name": "Free",
+    "slug": "free",
+    "price": 0,
+    "currency": "USD",
+    "interval": "free",
+    "description": "Try Zegbot with text chat.",
+    "features": [
+      "10 text asks per day",
+      "WhatsApp connect",
+      "Basic AI replies"
+    ],
+    "voiceUsesPerMonth": 0,
+    "textUsesPerDay": 10,
+    "active": true,
+    "popular": false,
+    "sortOrder": 0,
+    "stripeProductId": null,
+    "stripePriceId": null,
+    "id": "58b5d5e2-774b-4455-8787-86ff97c7fe08",
+    "createdAt": "2026-09-01T10:06:10.516Z",
+    "updatedAt": "2026-09-01T10:06:10.516Z"
+  },
+  {
+    "name": "Starter",
+    "slug": "starter",
+    "price": 4.99,
+    "currency": "USD",
+    "interval": "month",
+    "description": "Light daily use with some voice.",
+    "features": [
+      "Unlimited text chat",
+      "50 voice uses per month",
+      "WhatsApp send & read"
+    ],
+    "voiceUsesPerMonth": 50,
+    "textUsesPerDay": null,
+    "active": true,
+    "popular": false,
+    "sortOrder": 1,
+    "stripeProductId": null,
+    "stripePriceId": null,
+    "id": "8c70cd65-2768-4eb1-bf64-db44c5bb8c6e",
+    "createdAt": "2026-09-01T10:06:10.516Z",
+    "updatedAt": "2026-09-01T10:06:10.516Z"
+  },
+  {
+    "name": "Pro",
+    "slug": "pro",
+    "price": 9.99,
+    "currency": "USD",
+    "interval": "month",
+    "description": "Best for daily voice + messaging.",
+    "features": [
+      "Unlimited text chat",
+      "Unlimited voice",
+      "Priority AI responses",
+      "All channels"
+    ],
+    "voiceUsesPerMonth": null,
+    "textUsesPerDay": null,
+    "active": true,
+    "popular": true,
+    "sortOrder": 2,
+    "stripeProductId": null,
+    "stripePriceId": null,
+    "id": "3ac02080-e44d-4c29-8de3-762cebb1cc28",
+    "createdAt": "2026-09-01T10:06:10.516Z",
+    "updatedAt": "2026-09-01T10:06:10.516Z"
+  },
+  {
+    "name": "Annual Pro",
+    "slug": "annual-pro",
+    "price": 79,
+    "currency": "USD",
+    "interval": "year",
+    "description": "Pro features, billed once per year.",
+    "features": [
+      "Everything in Pro",
+      "Save ~34% vs monthly",
+      "Unlimited voice"
+    ],
+    "voiceUsesPerMonth": null,
+    "textUsesPerDay": null,
+    "active": true,
+    "popular": false,
+    "sortOrder": 3,
+    "stripeProductId": null,
+    "stripePriceId": null,
+    "id": "a7057bf8-8727-41f2-b51d-e64552022399",
+    "createdAt": "2026-09-01T10:06:10.516Z",
+    "updatedAt": "2026-09-01T10:06:10.516Z"
+  }
+]
