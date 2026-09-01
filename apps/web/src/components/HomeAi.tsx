@@ -10,20 +10,87 @@ type ChatMessage = {
   id: string;
   role: "user" | "assistant";
   text: string;
+  voice?: boolean;
+  at: string;
   pending?: AiChatResponse["pendingAction"];
   confirmToken?: string;
 };
 
 type InputMode = "voice" | "keyboard";
 
+function now() {
+  return new Date().toISOString();
+}
+
+function formatTime(iso: string) {
+  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function ModeToggle({
+  mode,
+  onKeyboard,
+  onVoice,
+}: {
+  mode: InputMode;
+  onKeyboard: () => void;
+  onVoice: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-center gap-2">
+      <button
+        type="button"
+        onClick={onKeyboard}
+        aria-label="Keyboard"
+        className={cn(
+          "flex h-10 w-10 items-center justify-center rounded-full text-lg transition",
+          mode === "keyboard"
+            ? "bg-blue-100 text-blue-700 shadow-sm"
+            : "text-slate-400 hover:bg-slate-100 hover:text-slate-600",
+        )}
+      >
+        ⌨
+      </button>
+      <button
+        type="button"
+        onClick={onVoice}
+        aria-label="Microphone"
+        className={cn(
+          "flex h-10 w-10 items-center justify-center rounded-full text-lg transition",
+          mode === "voice"
+            ? "bg-violet-100 text-violet-700 shadow-sm"
+            : "text-slate-400 hover:bg-slate-100 hover:text-slate-600",
+        )}
+      >
+        🎤
+      </button>
+    </div>
+  );
+}
+
+function MessageBubble({ msg }: { msg: ChatMessage }) {
+  const mine = msg.role === "user";
+  return (
+    <div className={cn("flex flex-col gap-1", mine ? "items-end" : "items-start")}>
+      <div
+        className={cn(
+          "max-w-[85%] animate-fade-up rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap shadow-sm",
+          mine
+            ? "bg-gradient-to-br from-blue-500 to-violet-600 text-white"
+            : "border border-slate-100 bg-white text-slate-700",
+        )}
+      >
+        {msg.voice && mine ? (
+          <span className="mb-1 block text-xs opacity-80">🎤 Voice</span>
+        ) : null}
+        {msg.text}
+      </div>
+      <span className="px-1 text-[10px] text-slate-400">{formatTime(msg.at)}</span>
+    </div>
+  );
+}
+
 export function HomeAi() {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      text: 'Tap the orb to speak, or switch to keyboard. Try "send hi to Mom".',
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<InputMode>("voice");
@@ -33,12 +100,15 @@ export function HomeAi() {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  const pendingVoiceIdRef = useRef<string | null>(null);
   const voiceModeRef = useRef(mode === "voice");
   voiceModeRef.current = mode === "voice";
 
+  const hasThread = messages.length > 0;
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, loading]);
+  }, [messages, loading, mode]);
 
   useEffect(() => () => {
     stopSpeaking();
@@ -52,6 +122,7 @@ export function HomeAi() {
         id,
         role: "assistant",
         text: data.reply,
+        at: now(),
         pending: data.pendingAction,
         confirmToken: data.confirmToken,
       },
@@ -59,12 +130,27 @@ export function HomeAi() {
     if (voiceModeRef.current) speakText(data.reply);
   }, []);
 
-  const sendText = useCallback(
-    async (text: string) => {
+  const runAi = useCallback(
+    async (text: string, userMsg?: { id: string; voice?: boolean }) => {
       const trimmed = text.trim();
       if (!trimmed || loading) return;
-      setInput("");
-      setMessages((m) => [...m, { id: `${Date.now()}-u`, role: "user", text: trimmed }]);
+
+      if (userMsg) {
+        setMessages((m) =>
+          m.map((msg) =>
+            msg.id === userMsg.id
+              ? { ...msg, text: trimmed, voice: userMsg.voice }
+              : msg,
+          ),
+        );
+      } else {
+        setInput("");
+        setMessages((m) => [
+          ...m,
+          { id: `${Date.now()}-u`, role: "user", text: trimmed, at: now() },
+        ]);
+      }
+
       setLoading(true);
       setOrbState("thinking");
       try {
@@ -72,14 +158,23 @@ export function HomeAi() {
         replyAssistant(data, `${Date.now()}-a`);
       } catch {
         const err = "Could not reach the API.";
-        setMessages((m) => [...m, { id: `${Date.now()}-e`, role: "assistant", text: err }]);
+        setMessages((m) => [
+          ...m,
+          { id: `${Date.now()}-e`, role: "assistant", text: err, at: now() },
+        ]);
         if (voiceModeRef.current) speakText(err);
       } finally {
         setLoading(false);
         setOrbState("idle");
+        pendingVoiceIdRef.current = null;
       }
     },
     [loading, replyAssistant],
+  );
+
+  const sendText = useCallback(
+    (text: string) => void runAi(text),
+    [runAi],
   );
 
   const confirm = async (token: string, msgId: string) => {
@@ -97,7 +192,7 @@ export function HomeAi() {
       if (voiceModeRef.current) speakText(data.reply);
     } catch {
       const err = "Could not confirm action.";
-      setMessages((m) => [...m, { id: `${Date.now()}-e`, role: "assistant", text: err }]);
+      setMessages((m) => [...m, { id: `${Date.now()}-e`, role: "assistant", text: err, at: now() }]);
       if (voiceModeRef.current) speakText(err);
     } finally {
       setLoading(false);
@@ -122,28 +217,57 @@ export function HomeAi() {
 
     const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
     chunksRef.current = [];
+    const voiceId = pendingVoiceIdRef.current;
+
     if (!blob.size) {
+      if (voiceId) {
+        setMessages((m) => m.filter((msg) => msg.id !== voiceId));
+        pendingVoiceIdRef.current = null;
+      }
       setOrbState("idle");
       return;
+    }
+
+    if (voiceId) {
+      setMessages((m) =>
+        m.map((msg) =>
+          msg.id === voiceId ? { ...msg, text: "Transcribing…" } : msg,
+        ),
+      );
     }
 
     setLoading(true);
     try {
       const text = await transcribeVoice(blob);
       setLoading(false);
-      await sendText(text);
+      if (voiceId) {
+        await runAi(text, { id: voiceId, voice: true });
+      } else {
+        await runAi(text);
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Could not transcribe.";
-      setMessages((m) => [...m, { id: `${Date.now()}-e`, role: "assistant", text: msg }]);
+      if (voiceId) {
+        setMessages((m) => m.filter((x) => x.id !== voiceId));
+      }
+      setMessages((m) => [...m, { id: `${Date.now()}-e`, role: "assistant", text: msg, at: now() }]);
       if (voiceModeRef.current) speakText(msg);
       setLoading(false);
       setOrbState("idle");
+      pendingVoiceIdRef.current = null;
     }
-  }, [sendText]);
+  }, [runAi]);
 
   const startRecording = useCallback(async () => {
     if (loading || recording) return;
     stopSpeaking();
+    const voiceId = `${Date.now()}-voice`;
+    pendingVoiceIdRef.current = voiceId;
+    setMessages((m) => [
+      ...m,
+      { id: voiceId, role: "user", text: "Recording…", voice: true, at: now() },
+    ]);
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -157,6 +281,8 @@ export function HomeAi() {
       setRecording(true);
       setOrbState("listening");
     } catch {
+      pendingVoiceIdRef.current = null;
+      setMessages((m) => m.filter((msg) => msg.id !== voiceId));
       setMode("keyboard");
       setMessages((m) => [
         ...m,
@@ -164,121 +290,78 @@ export function HomeAi() {
           id: `${Date.now()}-mic`,
           role: "assistant",
           text: "Microphone access denied. Use keyboard mode instead.",
+          at: now(),
         },
       ]);
     }
   }, [loading, recording]);
 
-  const onOrbClick = () => {
-    if (mode !== "voice") {
-      document.getElementById("home-ai-input")?.focus();
-      return;
-    }
+  const switchToKeyboard = () => {
+    stopSpeaking();
     if (recording) void stopRecording();
-    else void startRecording();
+    setMode("keyboard");
+  };
+
+  const switchToVoice = () => {
+    setMode("voice");
   };
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex shrink-0 items-center justify-center gap-3 py-4">
-        <button
-          type="button"
-          onClick={() => {
-            stopSpeaking();
-            if (recording) void stopRecording();
-            setMode("keyboard");
-          }}
-          className={cn(
-            "rounded-full px-3 py-1.5 text-xs font-semibold transition",
-            mode === "keyboard"
-              ? "bg-blue-100 text-blue-700"
-              : "text-slate-400 hover:text-slate-600",
-          )}
-          aria-label="Keyboard mode"
+      {mode === "keyboard" || hasThread ? (
+        <div
+          ref={scrollRef}
+          className="scrollbar-thin min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4"
         >
-          ⌨
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("voice")}
-          className={cn(
-            "rounded-full px-3 py-1.5 text-xs font-semibold transition",
-            mode === "voice"
-              ? "bg-violet-100 text-violet-700"
-              : "text-slate-400 hover:text-slate-600",
-          )}
-          aria-label="Voice mode"
-        >
-          🎤
-        </button>
-      </div>
-
-      <div className="flex shrink-0 flex-col items-center justify-center py-2">
-        <button
-          type="button"
-          onClick={onOrbClick}
-          disabled={loading && !recording}
-          className={cn(
-            "ai-orb relative flex h-44 w-44 items-center justify-center rounded-full transition-transform active:scale-95 disabled:opacity-70",
-            orbState === "listening" && "ai-orb-listening",
-            orbState === "thinking" && "ai-orb-thinking",
-          )}
-          aria-label={mode === "voice" ? "Tap to record" : "Tap to type"}
-        >
-          <span className="ai-orb-core" />
-          <span className="ai-orb-glow" />
-          <span className="relative z-10 text-2xl text-white/90">✦</span>
-        </button>
-        <p className="mt-3 text-center text-xs text-slate-400">
-          {loading && !recording
-            ? "Thinking..."
-            : recording
-              ? "Recording… tap again to send"
-              : mode === "voice"
-                ? "Tap orb to speak"
-                : "Tap orb or type below"}
-        </p>
-      </div>
-
-      <div ref={scrollRef} className="scrollbar-thin min-h-0 flex-1 space-y-3 overflow-y-auto px-2 py-4">
-        {messages.map((msg) => (
-          <div key={msg.id} className="space-y-2">
-            <div
-              className={cn(
-                "max-w-[90%] animate-fade-up rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap",
-                msg.role === "user"
-                  ? "ml-auto bg-gradient-to-br from-blue-500 to-violet-600 text-white shadow-md shadow-blue-200"
-                  : "border border-slate-100 bg-white text-slate-700",
-              )}
-            >
-              {msg.text}
+          {messages.length === 0 && mode === "keyboard" ? (
+            <p className="text-center text-sm text-slate-400">
+              Ask Zegbot to send, summarize, or manage your chats.
+            </p>
+          ) : null}
+          {messages.map((msg) => (
+            <div key={msg.id} className="space-y-2">
+              <MessageBubble msg={msg} />
+              {msg.confirmToken && msg.pending ? (
+                <div className="flex gap-2 pl-1">
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() => void confirm(msg.confirmToken!, msg.id)}
+                    className="rounded-full bg-red-500 px-4 py-1.5 text-xs font-semibold text-white hover:bg-red-600 disabled:opacity-50"
+                  >
+                    Confirm
+                  </button>
+                  <span className="self-center text-xs text-slate-400">{msg.pending.label}</span>
+                </div>
+              ) : null}
             </div>
-            {msg.confirmToken && msg.pending ? (
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  disabled={loading}
-                  onClick={() => void confirm(msg.confirmToken!, msg.id)}
-                  className="rounded-full bg-red-500 px-4 py-1.5 text-xs font-semibold text-white hover:bg-red-600 disabled:opacity-50"
-                >
-                  Confirm
-                </button>
-                <span className="self-center text-xs text-slate-400">{msg.pending.label}</span>
-              </div>
-            ) : null}
-          </div>
-        ))}
-      </div>
+          ))}
+          {loading && !recording ? (
+            <div className="flex items-center gap-2 text-sm text-slate-400">
+              <span className="h-2 w-2 animate-pulse-soft rounded-full bg-blue-400" />
+              Thinking…
+            </div>
+          ) : null}
+        </div>
+      ) : (
+        <div className="flex flex-1 items-center justify-center px-6">
+          <p className="text-center text-sm text-slate-400">
+            Tap the mic below and speak. Your messages will show here.
+          </p>
+        </div>
+      )}
 
-      {mode === "keyboard" && (
-        <div className="shrink-0 border-t border-slate-200 bg-white/90 p-4 backdrop-blur-md">
-          <div className="flex gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2">
+      <div className="shrink-0 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-md">
+        <ModeToggle mode={mode} onKeyboard={switchToKeyboard} onVoice={switchToVoice} />
+
+        {mode === "keyboard" ? (
+          <div className="mt-3 flex gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-2">
             <input
               id="home-ai-input"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && void sendText(input)}
-              placeholder="Ask Zegbot anything..."
+              placeholder="Ask Zegbot anything…"
               className="flex-1 bg-transparent px-3 py-2 text-sm text-slate-800 outline-none placeholder:text-slate-400"
             />
             <button
@@ -290,8 +373,36 @@ export function HomeAi() {
               Send
             </button>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="mt-3 flex flex-col items-center gap-2 pb-1">
+            <button
+              type="button"
+              onClick={() => {
+                if (recording) void stopRecording();
+                else void startRecording();
+              }}
+              disabled={loading && !recording}
+              className={cn(
+                "ai-orb ai-orb-sm relative flex items-center justify-center rounded-full transition-transform active:scale-95 disabled:opacity-70",
+                orbState === "listening" && "ai-orb-listening",
+                orbState === "thinking" && "ai-orb-thinking",
+              )}
+              aria-label="Tap to record"
+            >
+              <span className="ai-orb-core" />
+              <span className="ai-orb-glow" />
+              <span className="relative z-10 text-lg text-white/90">✦</span>
+            </button>
+            <p className="text-center text-xs text-slate-400">
+              {loading && !recording
+                ? "Thinking…"
+                : recording
+                  ? "Tap again to send"
+                  : "Tap to speak"}
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -61,6 +61,8 @@ export function WhatsAppConnect({
       setBusy(false);
     }
   };
+
+  const shareOtherDevice = async () => {
     setError("");
     try {
       await fetch(`${API_URL}/whatsapp/connect`, { method: "POST" });

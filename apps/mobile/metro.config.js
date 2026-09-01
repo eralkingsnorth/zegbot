@@ -11,6 +11,12 @@ config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, "node_modules"),
   path.resolve(workspaceRoot, "node_modules"),
 ];
+config.resolver.disableHierarchicalLookup = true;
+
+config.resolver.extraNodeModules = {
+  react: path.resolve(workspaceRoot, "node_modules/react"),
+  "react-dom": path.resolve(workspaceRoot, "node_modules/react-dom"),
+};
 
 config.transformer = {
   ...config.transformer,
