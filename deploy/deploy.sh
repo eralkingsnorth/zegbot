@@ -59,11 +59,13 @@ fi
 pm2 startOrReload deploy/ecosystem.config.cjs
 pm2 save
 
-echo "==> Nginx"
-if [ -f deploy/nginx-zegbot.conf ]; then
-  sudo cp deploy/nginx-zegbot.conf /etc/nginx/sites-available/zegbot
-  sudo ln -sf /etc/nginx/sites-available/zegbot /etc/nginx/sites-enabled/zegbot
-  sudo nginx -t && sudo systemctl reload nginx
+echo "==> Apache (this server uses Apache, not nginx)"
+if [ -f deploy/apache-zegbot-web.conf ]; then
+  sudo cp deploy/apache-zegbot-web.conf /etc/apache2/sites-available/zegbot-web.conf
+  sudo cp deploy/apache-zegbot-api.conf /etc/apache2/sites-available/zegbot-api.conf
+  sudo a2enmod proxy proxy_http proxy_wstunnel rewrite headers 2>/dev/null || true
+  sudo a2ensite zegbot-web.conf zegbot-api.conf 2>/dev/null || true
+  sudo apache2ctl configtest && sudo systemctl reload apache2
 fi
 
 echo "==> Health check"
@@ -71,6 +73,6 @@ sleep 3
 curl -sf http://127.0.0.1:3001/health && echo " API OK"
 curl -sf -o /dev/null http://127.0.0.1:3002 && echo " Web OK"
 
-echo "==> Done. Point DNS:"
-echo "    zegbot.wachatpilot.com     -> $(curl -s ifconfig.me 2>/dev/null || hostname -I | awk '{print $1}')"
-echo "    api.zegbot.wachatpilot.com -> same IP"
+echo "==> Done. Add DNS A records -> $(curl -s ifconfig.me 2>/dev/null || hostname -I | awk '{print $1}')"
+echo "    zegbot.wachatpilot.com"
+echo "    api.zegbot.wachatpilot.com"
