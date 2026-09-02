@@ -1,0 +1,26 @@
+{
+  "cli": {
+    "version": ">= 13.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "production": {
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://api.zegbot.wachatpilot.com",
+        "EXPO_PUBLIC_WEB_URL": "http://zegbot.wachatpilot.com"
+      }
+    },
+    "preview": {
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://37.59.126.13:3001",
+        "EXPO_PUBLIC_WEB_URL": "http://37.59.126.13:3002"
+      }
+    }
+  }
+}
