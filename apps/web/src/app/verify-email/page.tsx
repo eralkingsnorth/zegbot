@@ -1,31 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/Button";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { verifyEmail } from "@/lib/admin-api";
 
-function VerifyEmailInner() {
-  const params = useSearchParams();
+export default function VerifyEmailPage() {
   const router = useRouter();
-  const token = params.get("token") ?? "";
   const [error, setError] = useState("");
-  const [status, setStatus] = useState<"loading" | "ok" | "error">(
-    token ? "loading" : "error",
-  );
+  const [status, setStatus] = useState<"loading" | "ok" | "error">("loading");
 
   useEffect(() => {
-    if (!token) {
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get("token") ?? "";
+
+    if (!t) {
       setError("Missing verification token.");
       setStatus("error");
       return;
     }
 
     let cancelled = false;
-    verifyEmail({ token })
+    verifyEmail({ token: t })
       .then(() => {
         if (cancelled) return;
         setStatus("ok");
@@ -40,43 +39,35 @@ function VerifyEmailInner() {
     return () => {
       cancelled = true;
     };
-  }, [token, router]);
+  }, [router]);
 
-  return (
-    <GlassCard className="mx-auto max-w-md p-6">
-      {status === "loading" && (
-        <>
-          <h1 className="text-xl font-bold">Verifying email</h1>
-          <p className="mt-3 text-sm text-zinc-400">Please wait...</p>
-        </>
-      )}
-      {status === "ok" && (
-        <>
-          <h1 className="text-xl font-bold">Email verified</h1>
-          <p className="mt-3 text-sm text-zinc-400">Redirecting you into Zegbot...</p>
-        </>
-      )}
-      {status === "error" && (
-        <>
-          <h1 className="text-xl font-bold">Could not verify</h1>
-          <p className="mt-3 text-sm text-red-400">{error}</p>
-          <Link href="/login">
-            <Button className="mt-6 w-full" variant="secondary">
-              Go to log in
-            </Button>
-          </Link>
-        </>
-      )}
-    </GlassCard>
-  );
-}
-
-export default function VerifyEmailPage() {
   return (
     <AppShell>
-      <Suspense fallback={<GlassCard className="mx-auto max-w-md p-6">Loading...</GlassCard>}>
-        <VerifyEmailInner />
-      </Suspense>
+      <GlassCard className="mx-auto max-w-md p-6">
+        {status === "loading" && (
+          <>
+            <h1 className="text-xl font-bold">Verifying email</h1>
+            <p className="mt-3 text-sm text-zinc-400">Please wait...</p>
+          </>
+        )}
+        {status === "ok" && (
+          <>
+            <h1 className="text-xl font-bold">Email verified</h1>
+            <p className="mt-3 text-sm text-zinc-400">Redirecting you into Zegbot...</p>
+          </>
+        )}
+        {status === "error" && (
+          <>
+            <h1 className="text-xl font-bold">Could not verify</h1>
+            <p className="mt-3 text-sm text-red-400">{error || "Missing verification token."}</p>
+            <Link href="/login">
+              <Button className="mt-6 w-full" variant="secondary">
+                Go to log in
+              </Button>
+            </Link>
+          </>
+        )}
+      </GlassCard>
     </AppShell>
   );
 }
